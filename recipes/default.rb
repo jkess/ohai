@@ -24,17 +24,27 @@ Chef::Log.info("ohai plugins will be at: #{node['ohai']['plugin_path']}")
 
 reload_ohai = false
 node['ohai']['plugins'].each_pair do |source_cookbook, path|
-  rd = remote_directory node['ohai']['plugin_path'] do
-    cookbook source_cookbook
-    source path
-    owner 'root'
-    group 'root'
-    mode '0755'
-    recursive true
-    purge false
-    action :nothing
+  case node['platform']
+  when "windows"
+    rd = remote_directory node['ohai']['plugin_path'] do
+      cookbook source_cookbook
+      source path
+      recursive true
+      purge false
+      action :nothing
+    end
+  else
+    rd = remote_directory node['ohai']['plugin_path'] do
+      cookbook source_cookbook
+      source path
+      owner 'root'
+      group 'root'
+      mode '0755'
+      recursive true
+      purge false
+      action :nothing
+    end
   end
-
   rd.run_action(:create)
   reload_ohai ||= rd.updated?
 end
